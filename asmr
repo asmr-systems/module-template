@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+CMD="usage"
+
+function usage() {
+  echo "asmr - commandline tool for working on projects."
+  echo ""
+  echo "Usage:"
+  echo "       asmr dev   \t\t\t\t starts dev environment in current project."
+  echo "       asmr usage \t\t\t\t prints this help message."
+  echo ""
+}
+
+function devup() {
+  # TODO check to see if vagrant box is up yet.
+  # if not, start it.
+  ./dev-environment/scripts/work-on-project "$(pwd)"
+}
+
+function exec() {
+  # TODO check command
+  # for now just run dev
+  devup
+}
+
+function parse_args() {
+    while [[ $# -gt 0 ]]
+  do
+    local next_arg="$1"
+    case $next_arg in
+      dev)
+        CMD="$1"
+        shift
+        ;;
+      -h|--help|usage)
+        usage
+        exit 0
+        ;;
+      *)
+        usage
+        exit 0
+        ;;
+    esac
+  done
+}
+
+parse_args $@
