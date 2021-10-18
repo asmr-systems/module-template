@@ -1,0 +1,178 @@
+#:::: {{ project_name }} Firmware Makefile
+#:::::::::::::::::::::::::::::::::::::::::
+#
+#:::: References
+#:::::::::::::::
+# [arm-none-eabi-gcc manual](https://man.archlinux.org/man/community/arm-none-eabi-gcc/arm-none-eabi-gcc.1.en)
+# [arm-none-eabi-ld manual](https://manpages.debian.org/testing/binutils-arm-none-eabi/arm-none-eabi-ld.1.en.html)
+# [gcc floating point options](https://wiki.segger.com/GCC_floating-point_options)
+# [make tutorial](https://makefiletutorial.com/)
+# [mcu-starter-projects](https://github.com/ataradov/mcu-starter-projects/blob/master/samd21/make/Makefile)
+# [winterbloom build](https://github.com/wntrblm/wintertools/blob/main/wintertools/buildgen.py)
+
+
+#:::: Source Files
+#:::::::::::::::::
+SRCS += src/main.cc
+SRCS += vendor/libmcu/cmsis/device/{{ mcu_family }}/src/gcc/{{ mcu_startup_src }}
+
+
+#:::: Include Directories
+#::::::::::::::::::::::::
+INCLUDES += -Isrc
+INCLUDES += -Ivendor/libmcu/cmsis/core/include
+INCLUDES += -Ivendor/libmcu/cmsis/device/{{ mcu_family }}/include
+
+
+#:::: Linker Script
+#::::::::::::::::::
+LINKER_SCRIPT = vendor/libmcu/linkers/{{ mcu_family }}/{{ mcu_linker_script }}
+
+
+#:::: Linked Libraries
+#:::::::::::::::::::::
+LIBS += -lm				# math.
+LIBS += -lc				# libc.
+LIBS += -lstdc++			# libc++.
+
+
+#:::: Macro Definitions (Preprocessor)
+#:::::::::::::::::::::::::::::::::::::
+DEFINES += -D__{{ mcu_full_name | upper }}__		# MCU variant.
+DEFINES += -DDONT_USE_CMSIS_INIT
+DEFINES += -DF_CPU=1000000UL		# CPU Frequency (1MHz).
+
+
+#:::: Output
+#:::::::::::
+BUILD = build
+BIN   = test_project
+
+
+.PHONY: all clean size
+
+
+#:::: Compiler Tools
+#:::::::::::::::::::
+CC      = arm-none-eabi-gcc		# compiler collection targeting arm architecture, no operating system (none), using the embedded ABI.
+CXX     = arm-none-eabi-gcc		# compiler collection targeting arm architecture, no operating system (none), using the embedded ABI.
+OBJCOPY = arm-none-eabi-objcopy		# utility for copying object files around.
+SIZE    = arm-none-eabi-size            # utility for getting the size of a binary.
+
+
+#:::: Common Compiler Options
+#::::::::::::::::::::::::::::
+CMFLAGS += -Wall			# enables nearly all warnings.
+CMFLAGS += -Wextra			# extra warning flags not enabled by Wall.
+CMFLAGS += -Os				# enable all O2 compiler optimizations except for those that increase code size.
+CMFLAGS += -fdata-sections		# places each data item into its own section in the output file. Use with linker's --gc-sections to generate smaller statically linked executables.
+CMFLAGS += -ffunction-sections		# places each function into its own section in the output file. Use with linker's --gc-sections to generate smaller statically linked executables.
+CMFLAGS += -funsigned-char		# makes chars be unsigned.
+CMFLAGS += -funsigned-bitfields		# makes bitfields be unsigned.
+CMFLAGS += -fshort-enums		# allocate only as many bytes as needed for enum types.
+CMFLAGS += -fdiagnostics-color=always	# always use diagnostic colors for outputs.
+
+
+#:::: CPU Architecure Options
+#::::::::::::::::::::::::::::
+ARCHFLAGS += -mcpu=cortex-{{ cpu_cmsis_name }}	# target processor (ARM Cortex-M0+).
+ARCHFLAGS += -mthumb			# use Thumb (Thumb-1) instruction set architecture.
+ARCHFLAGS += -mfpu=auto			# auto detect if we are to use floating point hardware.
+ARCHFLAGS += -mfloat-abi={{ cpu_float_abi }}		# full software floating point. -mfpu option ignored and floating point arguments passed into integer registers during funciton calls.
+ARCHFLAGS += -mabi=aapcs		# generate code for Arm Architecture Procedure Call Standard (AAPCS).
+
+
+#:::: Preprocessor Options
+#:::::::::::::::::::::::::
+CPPFLAGS += -MMD			# Make dependency rule generation; creates a dependency list of outputs.
+CPPFLAGS += -MP				# create phony Make targets for each generated dependency (to avoid some Make warnings).
+
+
+#:::: Linker Options
+#:::::::::::::::::::
+LDFLAGS += -mcpu=cortex-{{ cpu_cmsis_name }}		# ? this seems redundant with compiler flags above, but when taken away the resulting binary size is larger.
+LDFLAGS += -mthumb			# ? this seems redundant with compiler flags above, but when taken away the resulting binary size is larger.
+LDFLAGS += -Wl,--gc-sections		# garbage collect any unused input sections. this makes binary smaller by getting rid of extra stuff.
+LDFLAGS += -Wl,--script=$(LINKER_SCRIPT)# set linker script to use.
+LDFLAGS += -Wl,-Map=$(BUILD)/link.map	# output a link map. helpful for debugging.
+LDFLAGS += -specs=nosys.specs		# link and use libnosys to perform system calls (so malloc will work e.g.).
+
+
+# aggregate common compiler flags
+COMPILER_FLAGS = $(strip $(CMFLAGS) $(ARCHFLAGS) $(INCLUDES) $(DEFINES) $(CPPFLAGS))
+
+
+#:::: C Compiler Options
+#:::::::::::::::::::::::
+CFLAGS += --std=gnu11			# use GNU 11 C standard.
+CFLAGS += $(COMPILER_FLAGS)
+
+
+#:::: C++ Compiler Options
+#:::::::::::::::::::::::::
+CXXFLAGS += --std=c++17			# use C++ 17 standard.
+CXXFLAGS += -fno-exceptions		# disable exceptions.
+CXXFLAGS += -fno-rtti			# disable Run-time Type Information (RTTI) used by dynamic_cast<> e.g.
+CXXFLAGS += $(COMPILER_FLAGS)
+
+
+# aggregate all object names.
+OBJS = $(SRCS:%=$(BUILD)/%.o)
+
+
+
+#:::: Targets
+#::::::::::::
+
+
+#:::: All build pipeline.
+all: directory $(BUILD)/$(BIN).elf $(BUILD)/$(BIN).hex $(BUILD)/$(BIN).bin size
+
+#:::: Linking
+$(BUILD)/$(BIN).elf: $(OBJS)
+	@echo LD $@
+	@$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o $@
+
+#:::: .hex generation (via objcopy)
+$(BUILD)/$(BIN).hex: $(BUILD)/$(BIN).elf
+	@echo OBJCOPY $@
+	@$(OBJCOPY) -O ihex $^ $@
+
+#:::: .bin generation (via objcopy)
+$(BUILD)/$(BIN).bin: $(BUILD)/$(BIN).elf
+	@echo OBJCOPY $@
+	@$(OBJCOPY) -O binary $^ $@
+
+#:::: Compile C++ sources
+$(BUILD)/%.cc.o: %.cc
+	@echo Compiling $@
+	@mkdir -p $(dir $@)
+	@$(CXX) $(CXXFLAGS) -c $< -o $@
+
+#:::: Compile C sources
+$(BUILD)/%.c.o: %.c
+	@echo Compiling $@
+	@mkdir -p $(dir $@)
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+#:::: make build directory
+directory:
+	@mkdir -p $(BUILD)
+
+#:::: get size of built binary
+size: $(BUILD)/$(BIN).elf
+	@echo size:
+	@$(SIZE) -t $^
+
+clean:
+	@-rm -rf $(BUILD)
+
+
+#:::: Include Generated Makefiles
+#::::::::::::::::::::::::::::::::
+#
+# These are generated by the compiler preprocessor (via -Mx flags).
+# Including these is important because it allows for source files
+# to be recompiled incrementally if a header which it depends on
+# has changed.
+-include $(OBJS:.o=.d)
