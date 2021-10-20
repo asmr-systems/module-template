@@ -14,19 +14,19 @@
 #:::: Source Files
 #:::::::::::::::::
 SRCS += src/main.cc
-SRCS += vendor/libmcu/cmsis/device/{{ mcu_family }}/src/gcc/{{ mcu_startup_src }}
+SRCS += vendor/mcu-support/cmsis/device/{{ mcu_family }}/src/gcc/{{ mcu_startup_src }}
 
 
 #:::: Include Directories
 #::::::::::::::::::::::::
 INCLUDES += -Isrc
-INCLUDES += -Ivendor/libmcu/cmsis/core/include
-INCLUDES += -Ivendor/libmcu/cmsis/device/{{ mcu_family }}/include
+INCLUDES += -Ivendor/mcu-support/cmsis/core/include
+INCLUDES += -Ivendor/mcu-support/cmsis/device/{{ mcu_family }}/include
 
 
 #:::: Linker Script
 #::::::::::::::::::
-LINKER_SCRIPT = vendor/libmcu/linkers/{{ mcu_family }}/{{ mcu_linker_script }}
+LINKER_SCRIPT = vendor/mcu-support/linkers/{{ mcu_family }}/{{ mcu_linker_script }}
 
 
 #:::: Linked Libraries
@@ -49,7 +49,7 @@ BUILD = build
 BIN   = test_project
 
 
-.PHONY: all clean size
+.PHONY: all clean size bootloader
 
 
 #:::: Compiler Tools
@@ -176,3 +176,20 @@ clean:
 # to be recompiled incrementally if a header which it depends on
 # has changed.
 -include $(OBJS:.o=.d)
+
+
+#:::: Make Bootloader
+#::::::::::::::::::::
+bootloader:
+	@cd vendor/mcu-support/bootloaders/{{ mcu_bootloader }}; \
+	make BOARD=asmr_systems
+
+BOOTLOADER=vendor/mcu-support/bootloaders/{{ mcu_bootloader }}
+BOOTLOADER_BUILD={{ mcu_bootloader_build }}
+bootloader: directory
+	@cd $(BOOTLOADER); \
+	make BOARD=asmr_systems
+	mkdir -p $(BUILD)/bootloader
+	cp -r $(BOOTLOADER)/$(BOOTLOADER_BUILD)/* $(BUILD)/bootloader
+
+# TODO FINISH COPYING BINARY TO BUILD DIR OF PROJECT.
