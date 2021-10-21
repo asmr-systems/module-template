@@ -104,6 +104,12 @@ $(BUILD)/%.c.o: %.c
 	@mkdir -p $(dir $@)
 	@$(CC) $(CFLAGS) -c $< -o $@
 
+#:::: Compile ASM sources
+$(BUILD)/%.s.o: %.s
+	@echo Compiling $@
+	@mkdir -p $(dir $@)
+	@$(CC) $(CFLAGS) -c $< -o $@
+
 #:::: make build directory
 directory:
 	@mkdir -p $(BUILD)

@@ -14,7 +14,9 @@
 #:::: Source Files
 #:::::::::::::::::
 SRCS += src/main.cc
-SRCS += vendor/mcu-support/cmsis/device/{{ mcu_family }}/src/gcc/{{ mcu_startup_src }}
+{% for src in mcu_sources %}
+SRCS += vendor/mcu-support/cmsis/device/{{ mcu_family }}/src/{{ src }}
+{% endfor %}
 
 
 #:::: Include Directories
@@ -38,7 +40,9 @@ LIBS += -lstdc++			# libc++.
 
 #:::: Macro Definitions (Preprocessor)
 #:::::::::::::::::::::::::::::::::::::
-DEFINES += -D__{{ mcu_full_name | upper }}__		# MCU variant.
+{% for define in mcu_defines %}
+DEFINES += {{ define }}
+{% endfor %}
 DEFINES += -DDONT_USE_CMSIS_INIT
 DEFINES += -DF_CPU=1000000UL		# CPU Frequency (1MHz).
 
@@ -46,7 +50,7 @@ DEFINES += -DF_CPU=1000000UL		# CPU Frequency (1MHz).
 #:::: Output
 #:::::::::::
 BUILD = build
-BIN   = test_project
+BIN   = {{ project_name }}
 
 
 .PHONY: all clean size bootloader
@@ -75,7 +79,7 @@ CMFLAGS += -fdiagnostics-color=always	# always use diagnostic colors for outputs
 
 #:::: CPU Architecure Options
 #::::::::::::::::::::::::::::
-ARCHFLAGS += -mcpu=cortex-{{ cpu_cmsis_name }}	# target processor (ARM Cortex-M0+).
+ARCHFLAGS += -mcpu={{ cpu_gcc_name }}	# target processor (ARM Cortex-M0+).
 ARCHFLAGS += -mthumb			# use Thumb (Thumb-1) instruction set architecture.
 ARCHFLAGS += -mfpu=auto			# auto detect if we are to use floating point hardware.
 ARCHFLAGS += -mfloat-abi={{ cpu_float_abi }}		# full software floating point. -mfpu option ignored and floating point arguments passed into integer registers during funciton calls.
@@ -90,8 +94,7 @@ CPPFLAGS += -MP				# create phony Make targets for each generated dependency (to
 
 #:::: Linker Options
 #:::::::::::::::::::
-LDFLAGS += -mcpu=cortex-{{ cpu_cmsis_name }}		# ? this seems redundant with compiler flags above, but when taken away the resulting binary size is larger.
-LDFLAGS += -mthumb			# ? this seems redundant with compiler flags above, but when taken away the resulting binary size is larger.
+LDFLAGS += $(ARCHFLAGS)			# provide architecture flags to linker
 LDFLAGS += -Wl,--gc-sections		# garbage collect any unused input sections. this makes binary smaller by getting rid of extra stuff.
 LDFLAGS += -Wl,--script=$(LINKER_SCRIPT)# set linker script to use.
 LDFLAGS += -Wl,-Map=$(BUILD)/link.map	# output a link map. helpful for debugging.
@@ -151,6 +154,12 @@ $(BUILD)/%.cc.o: %.cc
 
 #:::: Compile C sources
 $(BUILD)/%.c.o: %.c
+	@echo Compiling $@
+	@mkdir -p $(dir $@)
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+#:::: Compile ASM sources
+$(BUILD)/%.s.o: %.s
 	@echo Compiling $@
 	@mkdir -p $(dir $@)
 	@$(CC) $(CFLAGS) -c $< -o $@
