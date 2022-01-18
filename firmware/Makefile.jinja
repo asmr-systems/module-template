@@ -41,7 +41,7 @@ LIBS += -lstdc++			# libc++.
 #:::: Macro Definitions (Preprocessor)
 #:::::::::::::::::::::::::::::::::::::
 {% for define in mcu_defines %}
-DEFINES += {{ define }}
+DEFINES += -D{{ define }}
 {% endfor %}
 DEFINES += -DDONT_USE_CMSIS_INIT
 DEFINES += -DF_CPU=1000000UL		# CPU Frequency (1MHz).
@@ -62,6 +62,11 @@ CC      = arm-none-eabi-gcc		# compiler collection targeting arm architecture, n
 CXX     = arm-none-eabi-gcc		# compiler collection targeting arm architecture, no operating system (none), using the embedded ABI.
 OBJCOPY = arm-none-eabi-objcopy		# utility for copying object files around.
 SIZE    = arm-none-eabi-size            # utility for getting the size of a binary.
+
+
+#:::: Debugging
+#::::::::::::::
+CMFLAGS += -g
 
 
 #:::: Common Compiler Options
