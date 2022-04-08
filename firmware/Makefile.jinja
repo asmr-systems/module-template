@@ -62,7 +62,7 @@ BUILD = build
 BIN   = {{ project_name }}
 
 
-.PHONY: all clean size bootloader
+.PHONY: all clean size bootloader flash
 
 
 #:::: Compiler Tools
@@ -191,6 +191,8 @@ size: $(BUILD)/$(BIN).elf
 clean:
 	@-rm -rf $(BUILD)
 
+flash:
+	@JLinkExe -device {{ mcu_jlink_target }} -if swd -speed 4000 -CommandFile flash.jlink
 
 #:::: Include Generated Makefiles
 #::::::::::::::::::::::::::::::::
