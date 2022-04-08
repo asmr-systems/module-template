@@ -15,7 +15,7 @@
 #:::::::::::::::::
 SRCS += src/main.cc
 {% for src in mcu_sources -%}
-SRCS += vendor/mcu-support/cmsis/device/{{ mcu_family }}/src/{{ src }}
+SRCS += vendor/mcu-support/cmsis/device/{{ mcu_series }}/src/{{ src }}
 {% endfor -%}
 {% for src in libasmr_srcs -%}
 SRCS += vendor/{{ src }}
@@ -25,9 +25,9 @@ SRCS += vendor/{{ src }}
 #::::::::::::::::::::::::
 INCLUDES += -Isrc
 INCLUDES += -Ivendor/mcu-support/cmsis/core/include
-INCLUDES += -Ivendor/mcu-support/cmsis/device/{{ mcu_family }}/include
-INCLUDES += -Ivendor/libasmr/
-INCLUDES += -Ivendor/libasmr/api/ASMR.h
+INCLUDES += -Ivendor/mcu-support/cmsis/device/{{ mcu_series }}/include
+INCLUDES += -Ivendor/libasmr
+INCLUDES += -Ivendor/libasmr/api
 INCLUDES += -Ivendor/libasmr/arch/{{ mcu_family }}/core
 INCLUDES += -Ivendor/libasmr/arch/{{ mcu_family }}/libraries
 INCLUDES += -Ivendor/libasmr/arch/{{ mcu_family }}/variants/{{ mcu_series }}
