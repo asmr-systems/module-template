@@ -37,7 +37,7 @@ INCLUDES += -Ivendor/libasmr/libraries/{{ compatible_library }}/src
 
 #:::: Linker Script
 #::::::::::::::::::
-LINKER_SCRIPT = vendor/mcu-support/linkers/{{ mcu_family }}/{{ mcu_linker_script }}
+LINKER_SCRIPT = vendor/mcu-support/linkers/{{ mcu_series }}/{{ mcu_linker_script }}
 
 
 #:::: Linked Libraries
@@ -112,6 +112,7 @@ LDFLAGS += $(ARCHFLAGS)			# provide architecture flags to linker
 LDFLAGS += -Wl,--gc-sections		# garbage collect any unused input sections. this makes binary smaller by getting rid of extra stuff.
 LDFLAGS += -Wl,--script=$(LINKER_SCRIPT)# set linker script to use.
 LDFLAGS += -Wl,-Map=$(BUILD)/link.map	# output a link map. helpful for debugging.
+LDFLAGS += -Wl,--print-memory-usage     # output the memory usage
 LDFLAGS += -specs=nosys.specs		# link and use libnosys to perform system calls (so malloc will work e.g.).
 
 
@@ -203,14 +204,14 @@ clean:
 
 #:::: Make Bootloader
 #::::::::::::::::::::
-bootloader:
-	@cd vendor/mcu-support/bootloaders/{{ mcu_bootloader }}; \
-	make BOARD=asmr_systems
+# bootloader:
+# 	@cd vendor/mcu-support/bootloaders/{{ mcu_bootloader }}; \
+# 	make BOARD=asmr_systems
 
-BOOTLOADER=vendor/mcu-support/bootloaders/{{ mcu_bootloader }}
-BOOTLOADER_BUILD={{ mcu_bootloader_build }}
-bootloader: directory
-	@cd $(BOOTLOADER); \
-	make BOARD=asmr_systems
-	mkdir -p $(BUILD)/bootloader
-	cp -r $(BOOTLOADER)/$(BOOTLOADER_BUILD)/* $(BUILD)/bootloader
+# BOOTLOADER=vendor/mcu-support/bootloaders/{{ mcu_bootloader }}
+# BOOTLOADER_BUILD={{ mcu_bootloader_build }}
+# bootloader: directory
+# 	@cd $(BOOTLOADER); \
+# 	make BOARD=asmr_systems
+# 	mkdir -p $(BUILD)/bootloader
+# 	cp -r $(BOOTLOADER)/$(BOOTLOADER_BUILD)/* $(BUILD)/bootloader
