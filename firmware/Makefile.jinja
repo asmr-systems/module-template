@@ -32,7 +32,7 @@ INCLUDES += -Ivendor/libasmr/arch/{{ mcu_family }}/core
 INCLUDES += -Ivendor/libasmr/arch/{{ mcu_family }}/libraries
 INCLUDES += -Ivendor/libasmr/arch/{{ mcu_family }}/variants/{{ mcu_series }}
 {% for compatible_library in compatible_libraries -%}
-INCLUDES += -Ivendor/libasmr/libraries/{{ compatible_library }}
+INCLUDES += -Ivendor/libasmr/libraries/{{ compatible_library }}/src
 {% endfor %}
 
 #:::: Linker Script
