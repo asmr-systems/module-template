@@ -14,17 +14,26 @@
 #:::: Source Files
 #:::::::::::::::::
 SRCS += src/main.cc
-{% for src in mcu_sources %}
+{% for src in mcu_sources -%}
 SRCS += vendor/mcu-support/cmsis/device/{{ mcu_family }}/src/{{ src }}
+{% endfor -%}
+{% for src in libasmr_srcs -%}
+SRCS += vendor/{{ src }}
 {% endfor %}
-
 
 #:::: Include Directories
 #::::::::::::::::::::::::
 INCLUDES += -Isrc
 INCLUDES += -Ivendor/mcu-support/cmsis/core/include
 INCLUDES += -Ivendor/mcu-support/cmsis/device/{{ mcu_family }}/include
-
+INCLUDES += -Ivendor/libasmr/
+INCLUDES += -Ivendor/libasmr/api/ASMR.h
+INCLUDES += -Ivendor/libasmr/arch/{{ mcu_family }}/core
+INCLUDES += -Ivendor/libasmr/arch/{{ mcu_family }}/libraries
+INCLUDES += -Ivendor/libasmr/arch/{{ mcu_family }}/variants/{{ mcu_series }}
+{% for compatible_library in compatible_libraries -%}
+INCLUDES += -Ivendor/libasmr/libraries/{{ compatible_library }}
+{% endfor %}
 
 #:::: Linker Script
 #::::::::::::::::::
