@@ -194,6 +194,13 @@ clean:
 flash:
 	@JLinkExe -device {{ mcu_jlink_target }} -if swd -speed 4000 -CommandFile flash.jlink
 
+debug-server:
+	@JLinkGDBServer -if swd -device {{ mcu_jlink_target }}
+
+debug:
+	@gdb-multiarch build/$(BUILD).elf -x .cmd.debug
+
+
 #:::: Include Generated Makefiles
 #::::::::::::::::::::::::::::::::
 #
