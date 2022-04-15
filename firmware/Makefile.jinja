@@ -198,7 +198,7 @@ debug-server:
 	@JLinkGDBServer -if swd -device {{ mcu_jlink_target }}
 
 debug:
-	@gdb-multiarch build/$(BUILD).elf -x .cmd.debug
+	@gdb-multiarch build/$(BIN).elf -x .cmd.debug
 
 
 #:::: Include Generated Makefiles
